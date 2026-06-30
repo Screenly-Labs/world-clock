@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>World Clock</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="A clean, full-screen world clock for digital signage — many cities at once, each with its own local time, date and day/night accent. Clocks are configured entirely through the URL."
+    />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='13' fill='none' stroke='%23f6c455' stroke-width='2'/%3E%3Cpath d='M16 8v8l5 3' fill='none' stroke='%23f6c455' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"
+    />
+    <link
+      rel="preload"
+      href="./fonts/fraunces-latin-standard-normal.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
+    <link
+      rel="preload"
+      href="./fonts/hanken-grotesk-latin-wght-normal.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
+    <link rel="stylesheet" href="./styles/main.css" />
+    <script type="module" src="./main.js"></script>
+  </head>
+  <body>
+    <div class="board playing">
+      <div class="ambient" aria-hidden="true"></div>
+      <header class="masthead">
+        <span class="eyebrow" id="title">World Clock</span>
+        <span class="masthead-meta" id="masthead-meta"></span>
+      </header>
+      <main class="grid" id="grid" aria-live="off"></main>
+      <footer class="brand">
+        <span class="brand-by">Powered by</span>
+        <img
+          class="brand-logo"
+          src="./images/screenly-logo.svg"
+          alt="Screenly"
+          width="1649"
+          height="371"
+        />
+        <span class="brand-url">screenly.io</span>
+      </footer>
+    </div>
+  </body>
+</html>
