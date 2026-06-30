@@ -8,6 +8,7 @@ import {
   buildFormatters,
   type ClockConfig,
   type ClockSpec,
+  buildUtcFormatter,
   formatDate,
   formatTimeParts,
   getDayPeriod,
@@ -65,14 +66,24 @@ const createCard = (spec: ClockSpec, config: ClockConfig, index: number): ClockC
     node.dir = dir
   }
 
+  // The date, GMT offset and day-period band change at most once a minute, so we
+  // skip recomputing them (three formatToParts calls per card) on the sub-minute
+  // ticks that the `seconds` option produces.
+  let lastMinuteKey = Number.NaN
+
   const update = (now: Date): void => {
     const { time, period, periodFirst } = formatTimeParts(fmt.time, now)
     setText(timeEl, time)
     setText(periodEl, period)
     clockEl.classList.toggle('period-first', periodFirst && period !== '')
-    setText(dateEl, formatDate(fmt.date, now))
-    setText(offsetEl, getOffsetLabel(fmt.offset, now))
-    el.dataset.period = getDayPeriod(getZonedHour(fmt.hour, now))
+
+    const minuteKey = Math.floor(now.getTime() / 60000)
+    if (minuteKey !== lastMinuteKey) {
+      lastMinuteKey = minuteKey
+      setText(dateEl, formatDate(fmt.date, now))
+      setText(offsetEl, getOffsetLabel(fmt.offset, now))
+      el.dataset.period = getDayPeriod(getZonedHour(fmt.hour, now))
+    }
   }
 
   return { el, update }
@@ -98,12 +109,7 @@ const start = (): void => {
   // A neutral live UTC reference in the masthead, so a board of many zones still
   // has one shared anchor instant.
   const metaEl = document.querySelector('#masthead-meta')
-  const utcFmt = new Intl.DateTimeFormat('en-GB', {
-    hour: '2-digit',
-    minute: '2-digit',
-    timeZone: 'UTC',
-    hour12: false
-  })
+  const utcFmt = buildUtcFormatter()
 
   let timer: ReturnType<typeof setTimeout> | undefined
 

@@ -20,36 +20,38 @@ await syncFonts()
 await rm(DIST, { recursive: true, force: true })
 await mkdir(`${DIST}/styles`, { recursive: true })
 
-// Bundle main.ts (which imports clocks.ts) into a single minified ES module.
-const js = await Bun.build({
-  entrypoints: ['src/main.ts'],
-  outdir: DIST,
-  minify: true,
-  target: 'browser',
-  format: 'esm',
-  naming: '[name].js'
-})
-if (!js.success) {
-  console.error('✗ JS build failed')
-  for (const log of js.logs) console.error(log)
-  process.exit(1)
+// Bundle the JS and minify the CSS concurrently — they share no inputs, so
+// running them in parallel keeps the hot rebuild path short.
+//   JS:  bundle main.ts (which imports clocks.ts) into one minified ES module.
+//   CSS: minify; external: ['*'] leaves url(../fonts/...) refs untouched rather
+//        than trying to resolve them as build-time assets.
+const [js, css] = await Promise.all([
+  Bun.build({
+    entrypoints: ['src/main.ts'],
+    outdir: DIST,
+    minify: true,
+    target: 'browser',
+    format: 'esm',
+    naming: '[name].js'
+  }),
+  Bun.build({
+    entrypoints: ['assets/styles/main.css'],
+    outdir: `${DIST}/styles`,
+    minify: true,
+    external: ['*']
+  })
+])
+for (const { label, result, out } of [
+  { label: 'JS', result: js, out: `${DIST}/main.js` },
+  { label: 'CSS', result: css, out: `${DIST}/styles/main.css` }
+]) {
+  if (!result.success) {
+    console.error(`✗ ${label} build failed`)
+    for (const log of result.logs) console.error(log)
+    process.exit(1)
+  }
+  console.log(`✓ ${label}: ${out}`)
 }
-console.log(`✓ JS: ${DIST}/main.js`)
-
-// Minify the CSS in place under dist. external: ['*'] leaves url(../fonts/...)
-// references untouched rather than trying to resolve them as build-time assets.
-const css = await Bun.build({
-  entrypoints: ['assets/styles/main.css'],
-  outdir: `${DIST}/styles`,
-  minify: true,
-  external: ['*']
-})
-if (!css.success) {
-  console.error('✗ CSS build failed')
-  for (const log of css.logs) console.error(log)
-  process.exit(1)
-}
-console.log(`✓ CSS: ${DIST}/styles/main.css`)
 
 // Copy the HTML shell and the vendored fonts verbatim.
 await Bun.write(`${DIST}/index.html`, Bun.file('index.html'))

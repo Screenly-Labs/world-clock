@@ -2,6 +2,7 @@ import { describe, expect, it } from 'bun:test'
 import {
   buildFormatters,
   type ClockConfig,
+  buildUtcFormatter,
   DEFAULT_CLOCKS,
   deriveLabel,
   formatDate,
@@ -107,6 +108,11 @@ describe('parseClocks', () => {
     expect(config.clocks.map((c) => c.timeZone)).toEqual(['Europe/Paris'])
   })
 
+  it('keeps a comma in a label from a repeated tz param (not split like clocks=)', () => {
+    const config = parseClocks('?tz=Asia/Tokyo|Tokyo, Japan')
+    expect(config.clocks).toEqual([{ timeZone: 'Asia/Tokyo', label: 'Tokyo, Japan' }])
+  })
+
   it('resolves a single global locale, defaulting to en-GB', () => {
     expect(parseClocks('').locale).toBe('en-GB')
     expect(parseClocks('?locale=de-DE').locale).toBe('de-DE')
@@ -180,6 +186,13 @@ describe('time formatting (zoned, 12/24h, localized)', () => {
     const f = fmt({ timeZone: 'Europe/Helsinki', locale: 'fi-FI' })
     expect(formatTimeParts(f.time, INSTANT).time).toBe('16.30')
   })
+
+  it('always renders Latin digits, even for non-Latin-digit locales', () => {
+    // ar-EG defaults to Arabic-Indic numerals; only Latin fonts are vendored, so
+    // the time must stay ASCII digits. AM/PM marker may still localize.
+    const f = fmt({ timeZone: 'Africa/Cairo', locale: 'ar-EG' })
+    expect(formatTimeParts(f.time, INSTANT).time).toMatch(/^[0-9:.\s]+$/)
+  })
 })
 
 describe('date localization', () => {
@@ -219,6 +232,12 @@ describe('zoned hour, offset and day period', () => {
     expect(getOffsetLabel(fmt('America/New_York').offset, INSTANT)).toBe('GMT-4')
   })
 
+  it('returns an empty offset label when the formatter is unavailable', () => {
+    // Mirrors an engine without 'shortOffset' support, where buildFormatters
+    // leaves offset undefined rather than crashing the page.
+    expect(getOffsetLabel(undefined, INSTANT)).toBe('')
+  })
+
   it('bands the hour into dawn / day / dusk / night', () => {
     expect(getDayPeriod(6)).toBe('dawn')
     expect(getDayPeriod(12)).toBe('day')
@@ -228,11 +247,22 @@ describe('zoned hour, offset and day period', () => {
   })
 })
 
+describe('buildUtcFormatter', () => {
+  it('formats the masthead UTC reference as 24h HH:MM', () => {
+    expect(buildUtcFormatter().format(INSTANT)).toBe('13:30')
+  })
+})
+
 describe('isRtlLocale', () => {
   it('detects RTL primary languages', () => {
     expect(isRtlLocale('ar-SA')).toBe(true)
     expect(isRtlLocale('he-IL')).toBe(true)
     expect(isRtlLocale('en-GB')).toBe(false)
     expect(isRtlLocale('ja-JP')).toBe(false)
+  })
+
+  it('is case-insensitive on the language subtag', () => {
+    expect(isRtlLocale('AR-SA')).toBe(true)
+    expect(isRtlLocale('Ar')).toBe(true)
   })
 })

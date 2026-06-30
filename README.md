@@ -42,6 +42,11 @@ Add as many as you like, either by repeating `tz` or with one `clocks` list — 
 two can be combined and the order is preserved. **Unknown timezones are skipped**
 rather than shown broken, so a typo drops one card instead of breaking the board.
 
+> The `clocks` list is comma-separated, so a **label can't contain a comma**
+> there (the text after the comma would start a new entry). For a label with a
+> comma, use a repeated `tz` parameter instead, e.g.
+> `?tz=Asia/Tokyo|Tokyo, Japan`.
+
 ### `locale` is global, not per-city
 
 A world clock shows every city in **one** language and time format — the

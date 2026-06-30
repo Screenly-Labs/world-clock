@@ -47,8 +47,10 @@ export const DEFAULT_CLOCKS: ClockSpec[] = [
 // Arabic the time/date text gets dir="rtl".
 const RTL_LANGUAGES = new Set(['ar', 'fa', 'he', 'ps', 'dv', 'ur', 'ckb', 'sd', 'yi'])
 
+// BCP-47 subtags are case-insensitive, so lowercase the primary language before
+// the lookup — otherwise "AR-SA" would be mis-classified as LTR.
 export const isRtlLocale = (locale: string): boolean =>
-  RTL_LANGUAGES.has(locale.split('-')[0] ?? '')
+  RTL_LANGUAGES.has((locale.split('-')[0] ?? '').toLowerCase())
 
 // True only for a real, resolvable IANA zone. The DateTimeFormat constructor
 // throws on an unknown timeZone, which is how we reject junk like "Mars/Olympus".
@@ -132,11 +134,13 @@ export const parseClocks = (search: string): ClockConfig => {
 
 // The cached Intl formatters for one clock. Built once per spec and reused on
 // every tick — constructing a DateTimeFormat per render is the costly part.
+// `offset` is undefined on engines that lack the 'shortOffset' option (see
+// buildFormatters); the card simply omits the GMT label there.
 export interface ClockFormatters {
   time: Intl.DateTimeFormat
   date: Intl.DateTimeFormat
   hour: Intl.DateTimeFormat
-  offset: Intl.DateTimeFormat
+  offset: Intl.DateTimeFormat | undefined
 }
 
 // hour12 from the global format override; undefined lets the locale pick.
@@ -151,6 +155,10 @@ export const buildFormatters = (spec: ClockSpec, config: ClockConfig): ClockForm
   const timeOpts: Intl.DateTimeFormatOptions = {
     hour: 'numeric',
     minute: '2-digit',
+    // Force Latin digits regardless of locale: only Latin webfonts are vendored,
+    // so e.g. ar-EG must not render the time in Arabic-Indic numerals (which the
+    // Fraunces face has no glyphs for). The locale still drives names/AM-PM.
+    numberingSystem: 'latn',
     timeZone
   }
   if (config.seconds) timeOpts.second = '2-digit'
@@ -170,15 +178,24 @@ export const buildFormatters = (spec: ClockSpec, config: ClockConfig): ClockForm
   // dawn/day/dusk/night band for *this* zone, regardless of the display locale.
   const hourOpts: Intl.DateTimeFormatOptions = { hour: 'numeric', hour12: false, timeZone }
 
-  // Short GMT offset for the zone, e.g. "GMT+9" — useful orientation on a board
-  // of many cities. Extracted from the timeZoneName part below.
-  const offsetOpts: Intl.DateTimeFormatOptions = { timeZoneName: 'shortOffset', timeZone }
-
   return {
     time: new Intl.DateTimeFormat(locale, timeOpts),
     date: new Intl.DateTimeFormat(locale, dateOpts),
     hour: new Intl.DateTimeFormat('en-GB', hourOpts),
-    offset: new Intl.DateTimeFormat('en-GB', offsetOpts)
+    offset: buildOffsetFormatter(timeZone)
+  }
+}
+
+// Short GMT offset for the zone, e.g. "GMT+9" — useful orientation on a board of
+// many cities. 'shortOffset' only landed in ~Chrome 91 and throws where it is
+// unsupported; since isValidTimeZone validates with a plain formatter, an old
+// signage webview would otherwise crash the whole page here. Degrade to no offset
+// label instead of taking the board down.
+const buildOffsetFormatter = (timeZone: string): Intl.DateTimeFormat | undefined => {
+  try {
+    return new Intl.DateTimeFormat('en-GB', { timeZoneName: 'shortOffset', timeZone })
+  } catch {
+    return undefined
   }
 }
 
@@ -191,9 +208,9 @@ export const formatTimeParts = (
   date: Date
 ): { time: string; period: string; periodFirst: boolean } => {
   const parts = formatter.formatToParts(date)
-  const period = parts.find((p) => p.type === 'dayPeriod')?.value ?? ''
   const periodIndex = parts.findIndex((p) => p.type === 'dayPeriod')
   const hourIndex = parts.findIndex((p) => p.type === 'hour')
+  const period = periodIndex === -1 ? '' : (parts[periodIndex]?.value ?? '')
   const periodFirst = periodIndex !== -1 && periodIndex < hourIndex
   // Keep the locale's own hour:minute separator by joining the remaining parts;
   // only the day period is dropped, and trim removes the now-dangling space.
@@ -212,9 +229,20 @@ export const formatDate = (formatter: Intl.DateTimeFormat, date: Date): string =
 export const getZonedHour = (formatter: Intl.DateTimeFormat, date: Date): number =>
   Number.parseInt(formatter.format(date), 10)
 
-// The GMT offset label for the zone, e.g. "GMT+9" / "GMT-5:30".
-export const getOffsetLabel = (formatter: Intl.DateTimeFormat, date: Date): string =>
-  formatter.formatToParts(date).find((p) => p.type === 'timeZoneName')?.value ?? ''
+// The GMT offset label for the zone, e.g. "GMT+9" / "GMT-5:30". Returns '' when
+// the formatter is undefined (engine without 'shortOffset' support).
+export const getOffsetLabel = (formatter: Intl.DateTimeFormat | undefined, date: Date): string =>
+  formatter?.formatToParts(date).find((p) => p.type === 'timeZoneName')?.value ?? ''
+
+// The masthead's neutral live UTC reference, e.g. "18:30". Kept here (not in
+// main.ts) so every Intl formatter the app builds lives in one tested module.
+export const buildUtcFormatter = (): Intl.DateTimeFormat =>
+  new Intl.DateTimeFormat('en-GB', {
+    hour: '2-digit',
+    minute: '2-digit',
+    timeZone: 'UTC',
+    hour12: false
+  })
 
 export type DayPeriod = 'dawn' | 'day' | 'dusk' | 'night'
 
