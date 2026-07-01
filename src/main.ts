@@ -8,7 +8,6 @@ import {
   buildFormatters,
   type ClockConfig,
   type ClockSpec,
-  DEFAULT_CLOCKS,
   buildUtcFormatter,
   formatDate,
   formatTimeParts,
@@ -33,21 +32,33 @@ declare global {
 // they pick. No free-text (the custom title) is sent, only whether one is set.
 const reportUsage = (config: ClockConfig): void => {
   if (typeof window.gtag !== 'function') return
-  const zones = [...new Set(config.clocks.map((c) => c.timeZone))].sort().join(',')
   window.gtag('event', 'clock_config', {
     clock_count: config.clocks.length,
-    // Capped at GA4's 100-char param limit; a trailing '…' marks a truncated
-    // list so an over-long board reads as "…" rather than a silently clipped zone.
-    zones: zones.length > 100 ? `${zones.slice(0, 99)}…` : zones,
+    zones: encodeZones(config.clocks),
     locale: config.locale,
     hour_format: config.format,
     show_seconds: config.seconds,
     custom_title: config.title !== '',
-    // True when the parsed board is a real configuration rather than the bare-URL
-    // fallback. parseClocks returns the DEFAULT_CLOCKS reference verbatim on
-    // fallback, so this stays false even if invalid tz/clocks params were passed.
-    configured: config.clocks !== DEFAULT_CLOCKS
+    // Whether the URL supplied real clocks vs. the DEFAULT_CLOCKS fallback,
+    // read from parseClocks' explicit flag (not a brittle reference check).
+    configured: config.configured
   })
+}
+
+// Comma-joined IANA zones (deduped, sorted) for the analytics dimension. GA4
+// caps a param value at 100 chars, so drop WHOLE zones — never a mid-name slice
+// like "America/Los_A…" — until the list plus a trailing "…" marker fits. The
+// marker keeps a truncated board distinguishable from an exact list.
+const ZONES_MAX = 100
+const encodeZones = (clocks: ClockSpec[]): string => {
+  const zones = [...new Set(clocks.map((c) => c.timeZone))].sort()
+  if (zones.join(',').length <= ZONES_MAX) return zones.join(',')
+  const kept: string[] = []
+  for (const zone of zones) {
+    if ([...kept, zone, '…'].join(',').length > ZONES_MAX) break
+    kept.push(zone)
+  }
+  return [...kept, '…'].join(',')
 }
 
 // One rendered clock: its root element plus an update(date) that repaints it
