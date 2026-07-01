@@ -8,6 +8,7 @@ import {
   buildFormatters,
   type ClockConfig,
   type ClockSpec,
+  DEFAULT_CLOCKS,
   buildUtcFormatter,
   formatDate,
   formatTimeParts,
@@ -30,20 +31,22 @@ declare global {
 // query string *is* the usage. Fired once at load so we can see, in aggregate,
 // how many cities people show, which zones, and which locale/format options
 // they pick. No free-text (the custom title) is sent, only whether one is set.
-const reportUsage = (config: ClockConfig, params: URLSearchParams): void => {
+const reportUsage = (config: ClockConfig): void => {
   if (typeof window.gtag !== 'function') return
-  const zones = [...new Set(config.clocks.map((c) => c.timeZone))].sort()
+  const zones = [...new Set(config.clocks.map((c) => c.timeZone))].sort().join(',')
   window.gtag('event', 'clock_config', {
     clock_count: config.clocks.length,
-    // Joined + capped at GA4's 100-char param limit; still useful for the
-    // common small boards, truncated (with a marker) for very large ones.
-    zones: zones.join(',').slice(0, 100),
+    // Capped at GA4's 100-char param limit; a trailing '…' marks a truncated
+    // list so an over-long board reads as "…" rather than a silently clipped zone.
+    zones: zones.length > 100 ? `${zones.slice(0, 99)}…` : zones,
     locale: config.locale,
     hour_format: config.format,
     show_seconds: config.seconds,
     custom_title: config.title !== '',
-    // Whether any clock params were supplied, vs. falling back to DEFAULT_CLOCKS.
-    configured: params.has('tz') || params.has('clocks')
+    // True when the parsed board is a real configuration rather than the bare-URL
+    // fallback. parseClocks returns the DEFAULT_CLOCKS reference verbatim on
+    // fallback, so this stays false even if invalid tz/clocks params were passed.
+    configured: config.clocks !== DEFAULT_CLOCKS
   })
 }
 
@@ -149,7 +152,7 @@ const layoutGrid = (grid: HTMLElement, cards: ClockCard[]): void => {
 
 const start = (): void => {
   const config = parseClocks(window.location.search)
-  reportUsage(config, new URLSearchParams(window.location.search))
+  reportUsage(config)
 
   const titleEl = document.querySelector('#title')
   if (titleEl && config.title) titleEl.textContent = config.title
