@@ -89,6 +89,35 @@ const createCard = (spec: ClockSpec, config: ClockConfig, index: number): ClockC
   return { el, update }
 }
 
+// Choose a balanced grid shape for `count` cards on a board of the current
+// aspect ratio, and centre a partial last row. The board is landscape signage,
+// so we derive the ROW count from the aspect (a wide board wants few rows) and
+// let the columns follow — 4 cities → 2x2, 7 → 4+3, 6 → 3x2. The last row is
+// centred via the 2x sub-column grid: offsetting its first card by half the
+// empty span lands an odd remainder (e.g. 4+3) exactly in the middle.
+const layoutGrid = (grid: HTMLElement, cards: ClockCard[]): void => {
+  const count = cards.length
+  const aspect = (window.innerWidth || 1) / (window.innerHeight || 1)
+  const rows = Math.max(1, Math.round(Math.sqrt(count / aspect)))
+  const cols = Math.max(1, Math.ceil(count / rows))
+  // Re-tighten rows to the chosen columns so there's never a trailing empty row.
+  const usedRows = Math.ceil(count / cols)
+  const lastRow = count - (usedRows - 1) * cols
+
+  grid.style.setProperty('--cols', String(cols))
+
+  // Clear any prior centring offset before re-applying (columns change on resize).
+  for (const card of cards) card.el.style.removeProperty('grid-column')
+
+  // Nudge the first card of an incomplete last row right by half the empty span
+  // (in sub-column units, so an odd gap still centres); it still spans 2 tracks,
+  // and the rest of the row auto-flows after it. A full last row stays put.
+  if (lastRow < cols) {
+    const first = cards[count - lastRow]
+    if (first) first.el.style.gridColumn = `${1 + (cols - lastRow)} / span 2`
+  }
+}
+
 const start = (): void => {
   const config = parseClocks(window.location.search)
 
@@ -102,9 +131,14 @@ const start = (): void => {
   const fragment = document.createDocumentFragment()
   for (const card of cards) fragment.appendChild(card.el)
   grid.replaceChildren(fragment)
-  // Drives column-count tuning in CSS (data-count + the --count custom prop).
-  grid.dataset.count = String(cards.length)
-  grid.style.setProperty('--count', String(cards.length))
+  // Balance the grid shape (and centre a partial last row) for the current
+  // aspect ratio, then keep it balanced as a signage panel is rotated/resized.
+  layoutGrid(grid, cards)
+  let resizeTimer: ReturnType<typeof setTimeout> | undefined
+  window.addEventListener('resize', () => {
+    if (resizeTimer) clearTimeout(resizeTimer)
+    resizeTimer = setTimeout(() => layoutGrid(grid, cards), 150)
+  })
 
   // A neutral live UTC reference in the masthead, so a board of many zones still
   // has one shared anchor instant.
