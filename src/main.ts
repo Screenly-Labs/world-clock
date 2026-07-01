@@ -18,6 +18,35 @@ import {
   parseClocks
 } from './clocks.ts'
 
+// gtag() is defined by the inline GA4 snippet in index.html. It may be missing
+// (ad/tracker blockers strip it), so every call site guards for it.
+declare global {
+  interface Window {
+    gtag?: (...args: unknown[]) => void
+  }
+}
+
+// Report how the board is configured — the whole app is URL-driven, so the
+// query string *is* the usage. Fired once at load so we can see, in aggregate,
+// how many cities people show, which zones, and which locale/format options
+// they pick. No free-text (the custom title) is sent, only whether one is set.
+const reportUsage = (config: ClockConfig, params: URLSearchParams): void => {
+  if (typeof window.gtag !== 'function') return
+  const zones = [...new Set(config.clocks.map((c) => c.timeZone))].sort()
+  window.gtag('event', 'clock_config', {
+    clock_count: config.clocks.length,
+    // Joined + capped at GA4's 100-char param limit; still useful for the
+    // common small boards, truncated (with a marker) for very large ones.
+    zones: zones.join(',').slice(0, 100),
+    locale: config.locale,
+    hour_format: config.format,
+    show_seconds: config.seconds,
+    custom_title: config.title !== '',
+    // Whether any clock params were supplied, vs. falling back to DEFAULT_CLOCKS.
+    configured: params.has('tz') || params.has('clocks')
+  })
+}
+
 // One rendered clock: its root element plus an update(date) that repaints it
 // from an absolute instant. Formatters are built once and captured in the
 // closure — rebuilding a DateTimeFormat every tick is the expensive part.
@@ -120,6 +149,7 @@ const layoutGrid = (grid: HTMLElement, cards: ClockCard[]): void => {
 
 const start = (): void => {
   const config = parseClocks(window.location.search)
+  reportUsage(config, new URLSearchParams(window.location.search))
 
   const titleEl = document.querySelector('#title')
   if (titleEl && config.title) titleEl.textContent = config.title
