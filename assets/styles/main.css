@@ -237,14 +237,17 @@ body {
 
 /* =========================================================================
    Grid of city cards
-   auto-fit keeps cards as large as possible: few cities → big cards, many →
-   they wrap into a denser board. The min track scales with the fluid root, so
-   the same rule reads well from 480px to 4K. align-content centres the whole
-   board vertically so partial last rows don't list to the top.
+   The column count (--cols) is computed in main.ts from the city count AND the
+   board's aspect ratio, so the board is a balanced block — 4 cities → 2x2,
+   7 → 4+3 — instead of whatever happens to fit the width. A partial last row is
+   centred, not left-aligned: the grid is laid out in TWICE as many tracks as
+   there are columns (each card spans 2), so main.ts can offset the last row by
+   a half-column and centre an odd remainder exactly. align-content stretches
+   the equal-height rows to fill the board vertically.
    ========================================================================= */
 .grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 13rem), 1fr));
+  grid-template-columns: repeat(calc(var(--cols, 3) * 2), minmax(0, 1fr));
   /* Equal-height rows that divide the available height exactly: the board can
      never overflow vertically, however many cities wrap onto however many rows.
      Each card therefore has a DEFINITE width and height, which lets the time
@@ -254,6 +257,11 @@ body {
   align-content: stretch;
   gap: clamp(0.7rem, 1.8vmin, 1.6rem);
   min-block-size: 0;
+}
+
+/* Each card occupies one logical column = two sub-column tracks (see .grid). */
+.card {
+  grid-column: span 2;
 }
 
 /* =========================================================================
