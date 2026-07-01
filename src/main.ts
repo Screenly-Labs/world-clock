@@ -18,6 +18,51 @@ import {
   parseClocks
 } from './clocks.ts'
 
+// gtag() is defined by the inline GA4 snippet in index.html. It may be missing
+// (ad/tracker blockers strip it), so every call site guards for it.
+declare global {
+  interface Window {
+    gtag?: (...args: unknown[]) => void
+  }
+}
+
+// Report how the board is configured — the whole app is URL-driven, so the
+// query string *is* the usage. Fired once at load so we can see, in aggregate,
+// how many cities people show, which zones, and which locale/format options
+// they pick. No free-text (the custom title) is sent, only whether one is set.
+const reportUsage = (config: ClockConfig): void => {
+  if (typeof window.gtag !== 'function') return
+  // GA4 params should be strings or numbers — booleans can coerce
+  // inconsistently or get dropped in reports, so flags are sent as 0/1.
+  window.gtag('event', 'clock_config', {
+    clock_count: config.clocks.length,
+    zones: encodeZones(config.clocks),
+    locale: config.locale,
+    hour_format: config.format,
+    show_seconds: config.seconds ? 1 : 0,
+    custom_title: config.title !== '' ? 1 : 0,
+    // Whether the URL supplied real clocks vs. the DEFAULT_CLOCKS fallback,
+    // read from parseClocks' explicit flag (not a brittle reference check).
+    configured: config.configured ? 1 : 0
+  })
+}
+
+// Comma-joined IANA zones (deduped, sorted) for the analytics dimension. GA4
+// caps a param value at 100 chars, so drop WHOLE zones — never a mid-name slice
+// like "America/Los_A…" — until the list plus a trailing "…" marker fits. The
+// marker keeps a truncated board distinguishable from an exact list.
+const ZONES_MAX = 100
+const encodeZones = (clocks: ClockSpec[]): string => {
+  const zones = [...new Set(clocks.map((c) => c.timeZone))].sort()
+  if (zones.join(',').length <= ZONES_MAX) return zones.join(',')
+  const kept: string[] = []
+  for (const zone of zones) {
+    if ([...kept, zone, '…'].join(',').length > ZONES_MAX) break
+    kept.push(zone)
+  }
+  return [...kept, '…'].join(',')
+}
+
 // One rendered clock: its root element plus an update(date) that repaints it
 // from an absolute instant. Formatters are built once and captured in the
 // closure — rebuilding a DateTimeFormat every tick is the expensive part.
@@ -120,6 +165,7 @@ const layoutGrid = (grid: HTMLElement, cards: ClockCard[]): void => {
 
 const start = (): void => {
   const config = parseClocks(window.location.search)
+  reportUsage(config)
 
   const titleEl = document.querySelector('#title')
   if (titleEl && config.title) titleEl.textContent = config.title
