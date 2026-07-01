@@ -32,16 +32,18 @@ declare global {
 // they pick. No free-text (the custom title) is sent, only whether one is set.
 const reportUsage = (config: ClockConfig): void => {
   if (typeof window.gtag !== 'function') return
+  // GA4 params should be strings or numbers — booleans can coerce
+  // inconsistently or get dropped in reports, so flags are sent as 0/1.
   window.gtag('event', 'clock_config', {
     clock_count: config.clocks.length,
     zones: encodeZones(config.clocks),
     locale: config.locale,
     hour_format: config.format,
-    show_seconds: config.seconds,
-    custom_title: config.title !== '',
+    show_seconds: config.seconds ? 1 : 0,
+    custom_title: config.title !== '' ? 1 : 0,
     // Whether the URL supplied real clocks vs. the DEFAULT_CLOCKS fallback,
     // read from parseClocks' explicit flag (not a brittle reference check).
-    configured: config.configured
+    configured: config.configured ? 1 : 0
   })
 }
 
