@@ -26,6 +26,7 @@ const configFor = (overrides: Partial<ClockConfig> = {}): ClockConfig => ({
   format: 'auto',
   seconds: false,
   title: '',
+  configured: false,
   ...overrides
 })
 
@@ -88,6 +89,17 @@ describe('parseClocks', () => {
   it('falls back to DEFAULT_CLOCKS when no clocks are given', () => {
     const config = parseClocks('')
     expect(config.clocks.map((c) => c.timeZone)).toEqual(DEFAULT_CLOCKS.map((c) => c.timeZone))
+    expect(config.configured).toBe(false)
+  })
+
+  it('marks configured true when the URL supplies a real clock', () => {
+    expect(parseClocks('?tz=Europe/London').configured).toBe(true)
+  })
+
+  it('marks configured false when every supplied zone is invalid', () => {
+    const config = parseClocks('?tz=Mars/Olympus')
+    expect(config.clocks.map((c) => c.timeZone)).toEqual(DEFAULT_CLOCKS.map((c) => c.timeZone))
+    expect(config.configured).toBe(false)
   })
 
   it('reads repeated tz params in order', () => {

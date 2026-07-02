@@ -25,6 +25,11 @@ export interface ClockConfig {
   format: HourFormat
   seconds: boolean
   title: string
+  // True when the URL supplied at least one usable clock, false when `clocks`
+  // is the bare-URL DEFAULT_CLOCKS fallback. An explicit flag rather than a
+  // `clocks !== DEFAULT_CLOCKS` reference check, so cloning the defaults can't
+  // silently flip it.
+  configured: boolean
 }
 
 // Neutral default locale: en-GB gives 24h time and plain English month/weekday
@@ -123,12 +128,14 @@ export const parseClocks = (search: string): ClockConfig => {
     if (spec) clocks.push(spec)
   }
 
+  const configured = clocks.length > 0
   return {
-    clocks: clocks.length > 0 ? clocks : DEFAULT_CLOCKS,
+    clocks: configured ? clocks : DEFAULT_CLOCKS,
     locale,
     format: parseFormat(params.get('format')),
     seconds: params.has('seconds') && params.get('seconds') !== '0',
-    title: (params.get('title') ?? '').trim()
+    title: (params.get('title') ?? '').trim(),
+    configured
   }
 }
 
