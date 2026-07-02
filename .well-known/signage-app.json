@@ -1,0 +1,61 @@
+{
+  "manifestVersion": "1",
+  "id": "world-clock",
+  "name": "World Clock",
+  "description": "A clean, full-screen board of city clocks for any display — every city shows its own local time, date and GMT offset with a day/night accent, so a wall of cities reads at a glance as who is awake.",
+  "summary": "Every time zone that matters, on one screen.",
+  "vendor": "Screenly",
+  "tags": ["Clock"],
+  "homepage": "https://world-clock.srly.io/",
+  "source": "https://github.com/Screenly-Labs/world-clock",
+  "support": "https://github.com/Screenly-Labs/world-clock/issues",
+  "settings": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "type": "object",
+    "properties": {
+      "title": {
+        "type": "string",
+        "title": "Board title",
+        "x-widget": "text"
+      },
+      "tz": {
+        "type": "array",
+        "title": "Cities",
+        "items": {
+          "type": "object",
+          "x-widget": "timezone",
+          "x-format": "{zone}|{label}",
+          "properties": {
+            "zone": { "type": "string" },
+            "label": { "type": "string" }
+          },
+          "required": ["zone"]
+        }
+      },
+      "locale": {
+        "type": "string",
+        "title": "Language & region",
+        "description": "BCP-47 language tag applied to every card, e.g. en-US, de-DE, ja-JP. Leave blank for English (UK). Invalid tags fall back to English (UK).",
+        "default": "",
+        "pattern": "^$|^[A-Za-z]{2,3}(-[A-Za-z0-9]{2,8})*$",
+        "x-widget": "text"
+      },
+      "format": {
+        "type": "string",
+        "title": "Clock format",
+        "default": "",
+        "enum": ["", "12", "24"],
+        "x-enumLabels": ["Match language", "12-hour", "24-hour"]
+      },
+      "seconds": {
+        "type": "boolean",
+        "title": "Show seconds",
+        "default": false
+      }
+    }
+  },
+  "launch": {
+    "baseUrl": "https://world-clock.srly.io/",
+    "template": "{?title,tz*,locale,format,seconds}"
+  }
+}
