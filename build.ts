@@ -65,7 +65,8 @@ await cp('assets/images', `${DIST}/images`, { recursive: true })
 console.log(`✓ Images: ${DIST}/images/`)
 
 // The self-describing signage-app manifest. Served verbatim at the well-known
-// path (../app-store/docs/app-manifest.md) so the app store and players can read
+// path (schema documented in the separate Screenly-Labs/app-store repository,
+// docs/app-manifest.md) so the app store and players can read
 // this app's config surface. GitHub Pages serves it as application/json with
 // Access-Control-Allow-Origin: * (all Pages responses), and the .nojekyll marker
 // keeps the dot-prefixed directory from being skipped.
