@@ -491,18 +491,27 @@ body {
 
 /* =========================================================================
    Degraded mode — container-query fallback for older browsers.
-   The card sizes its text with cqw/cqh units (container queries: Chrome 105 /
-   Safari 16, above the ~2018 floor). Where they're unsupported the sized
-   declarations drop to a small inherited size, so re-size the readable text off
-   the viewport (vmin) instead. Grid-count-agnostic, so it stays legible whether
-   the board shows one city or twelve -- just not per-card-perfect.
+   The card sizes its text AND spacing with cqw/cqh units (container queries:
+   Chrome 105 / Safari 16). Where they're unsupported those declarations drop, so
+   the text collapses to an inherited size and the card loses its gap/padding
+   (leaving the time jammed against the edge, unstyled and misaligned). Re-derive
+   everything off the viewport (vmin) instead — grid-count-agnostic, so it stays
+   legible and laid-out whether the board shows one city or twelve. This block
+   must cover EVERY cqw/cqh declaration in the card, not just the font sizes.
    ========================================================================= */
 @supports not (container-type: size) {
+  .card {
+    gap: clamp(0.3rem, 1vmin, 1rem);
+    padding: clamp(0.85rem, 3.4vmin, 2.2rem);
+  }
   .card-label {
     font-size: clamp(0.8rem, 2.2vmin, 1.4rem);
   }
   .card-offset {
     font-size: clamp(0.6rem, 1.4vmin, 0.85rem);
+  }
+  .card-clock {
+    padding-block: clamp(0.2rem, 1.2vmin, 0.6rem);
   }
   .card-time {
     font-size: clamp(1.5rem, 7vmin, 9rem);
