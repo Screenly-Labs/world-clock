@@ -9,9 +9,19 @@
 // project subpath like https://<org>.github.io/world-clock/.
 
 import { cp, mkdir, rm } from 'node:fs/promises'
+import browserslist from 'browserslist'
+import { build as esbuild } from 'esbuild'
+import { browserslistToTargets, transform as lightningcss } from 'lightningcss'
 import { run as syncFonts } from './sync-fonts.ts'
 
 const DIST = 'dist'
+
+// The `browserslist` field in package.json is the CSS support floor: Lightning
+// CSS down-levels the stylesheet to it. The JS is lowered separately by esbuild to
+// a fixed ES2017 syntax floor (kept at/below the browserslist minimum); esbuild
+// can't read browserslist, so keep the two in sync if you change the floor. See
+// the degraded-mode notes in index.html / main.css.
+const cssTargets = browserslistToTargets(browserslist())
 
 // Vendor the Bun-managed webfonts into ./assets/fonts before copying them on.
 await syncFonts()
@@ -20,38 +30,43 @@ await syncFonts()
 await rm(DIST, { recursive: true, force: true })
 await mkdir(`${DIST}/styles`, { recursive: true })
 
-// Bundle the JS and minify the CSS concurrently — they share no inputs, so
-// running them in parallel keeps the hot rebuild path short.
-//   JS:  bundle main.ts (which imports clocks.ts) into one minified ES module.
-//   CSS: minify; external: ['*'] leaves url(../fonts/...) refs untouched rather
-//        than trying to resolve them as build-time assets.
-const [js, css] = await Promise.all([
-  Bun.build({
-    entrypoints: ['src/main.ts'],
-    outdir: DIST,
+// JS:  esbuild bundles main.ts (inlining clocks.ts + the polyfills shim) into one
+//      minified ES module and lowers modern syntax (?., ??, spread) to the ES2017
+//      floor so old signage players can parse it. Kept as an ES module (the page
+//      still loads it with <script type="module">, supported at the floor); only
+//      the syntax level changes.
+// CSS: Lightning CSS down-levels to the browserslist floor and minifies;
+//      url(../fonts/...) refs are left untouched.
+try {
+  await esbuild({
+    entryPoints: ['src/main.ts'],
+    bundle: true,
     minify: true,
-    target: 'browser',
     format: 'esm',
-    naming: '[name].js'
-  }),
-  Bun.build({
-    entrypoints: ['assets/styles/main.css'],
-    outdir: `${DIST}/styles`,
-    minify: true,
-    external: ['*']
+    target: ['es2017'],
+    outfile: `${DIST}/main.js`
   })
-])
-for (const { label, result, out } of [
-  { label: 'JS', result: js, out: `${DIST}/main.js` },
-  { label: 'CSS', result: css, out: `${DIST}/styles/main.css` }
-]) {
-  if (!result.success) {
-    console.error(`✗ ${label} build failed`)
-    for (const log of result.logs) console.error(log)
-    process.exit(1)
-  }
-  console.log(`✓ ${label}: ${out}`)
+} catch (error) {
+  console.error('✗ JS build failed')
+  console.error(error)
+  process.exit(1)
 }
+console.log(`✓ JS: ${DIST}/main.js`)
+
+try {
+  const { code: cssCode } = lightningcss({
+    filename: 'assets/styles/main.css',
+    code: await Bun.file('assets/styles/main.css').bytes(),
+    minify: true,
+    targets: cssTargets
+  })
+  await Bun.write(`${DIST}/styles/main.css`, cssCode)
+} catch (error) {
+  console.error('✗ CSS build failed')
+  console.error(error)
+  process.exit(1)
+}
+console.log(`✓ CSS: ${DIST}/styles/main.css`)
 
 // Copy the HTML shell and the vendored fonts verbatim.
 await Bun.write(`${DIST}/index.html`, Bun.file('index.html'))
