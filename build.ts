@@ -16,9 +16,10 @@ import { run as syncFonts } from './sync-fonts.ts'
 
 const DIST = 'dist'
 
-// Single browser-support floor for the whole build: the `browserslist` field in
-// package.json drives both the CSS down-leveling (Lightning CSS) and the JS
-// syntax floor, so old signage players get a build they can actually run. See
+// The `browserslist` field in package.json is the CSS support floor: Lightning
+// CSS down-levels the stylesheet to it. The JS is lowered separately by esbuild to
+// a fixed ES2017 syntax floor (kept at/below the browserslist minimum); esbuild
+// can't read browserslist, so keep the two in sync if you change the floor. See
 // the degraded-mode notes in index.html / main.css.
 const cssTargets = browserslistToTargets(browserslist())
 
@@ -29,18 +30,13 @@ await syncFonts()
 await rm(DIST, { recursive: true, force: true })
 await mkdir(`${DIST}/styles`, { recursive: true })
 
-// Bundle the JS and minify the CSS concurrently — they share no inputs, so
-// running them in parallel keeps the hot rebuild path short.
-//   JS:  bundle main.ts (which imports clocks.ts) into one minified ES module.
-//   CSS: minify; external: ['*'] leaves url(../fonts/...) refs untouched rather
-//        than trying to resolve them as build-time assets.
-//   JS:  esbuild bundles main.ts (inlining clocks.ts + the polyfills shim) into
-//        one minified ES module and lowers modern syntax (?., ??, spread) to the
-//        ES2017 floor so old signage players can parse it. Kept as an ES module
-//        (the page still loads it with <script type="module">, supported at the
-//        floor); only the syntax level changes.
-//   CSS: Lightning CSS down-levels to the browserslist floor and minifies;
-//        url(../fonts/...) refs are left untouched.
+// JS:  esbuild bundles main.ts (inlining clocks.ts + the polyfills shim) into one
+//      minified ES module and lowers modern syntax (?., ??, spread) to the ES2017
+//      floor so old signage players can parse it. Kept as an ES module (the page
+//      still loads it with <script type="module">, supported at the floor); only
+//      the syntax level changes.
+// CSS: Lightning CSS down-levels to the browserslist floor and minifies;
+//      url(../fonts/...) refs are left untouched.
 try {
   await esbuild({
     entryPoints: ['src/main.ts'],
@@ -57,13 +53,19 @@ try {
 }
 console.log(`✓ JS: ${DIST}/main.js`)
 
-const { code: cssCode } = lightningcss({
-  filename: 'assets/styles/main.css',
-  code: await Bun.file('assets/styles/main.css').bytes(),
-  minify: true,
-  targets: cssTargets
-})
-await Bun.write(`${DIST}/styles/main.css`, cssCode)
+try {
+  const { code: cssCode } = lightningcss({
+    filename: 'assets/styles/main.css',
+    code: await Bun.file('assets/styles/main.css').bytes(),
+    minify: true,
+    targets: cssTargets
+  })
+  await Bun.write(`${DIST}/styles/main.css`, cssCode)
+} catch (error) {
+  console.error('✗ CSS build failed')
+  console.error(error)
+  process.exit(1)
+}
 console.log(`✓ CSS: ${DIST}/styles/main.css`)
 
 // Copy the HTML shell and the vendored fonts verbatim.
