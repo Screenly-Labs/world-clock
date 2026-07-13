@@ -151,8 +151,7 @@ body {
 }
 
 .masthead,
-.grid,
-.brand {
+.grid {
   position: relative;
   z-index: 2;
 }
@@ -201,39 +200,8 @@ body {
   text-shadow: 0 1px 3px rgb(0 0 0 / 0.55);
 }
 
-/* =========================================================================
-   Brand footer — quiet Screenly lockup in the corner
-   ========================================================================= */
-.brand {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 0.7em;
-  padding-block-start: clamp(0.4rem, 1.2vmin, 0.9rem);
-  border-block-start: 1px solid var(--hairline);
-}
-
-.brand-by {
-  font-size: max(10px, 0.6rem);
-  text-transform: uppercase;
-  letter-spacing: 0.22em;
-  color: var(--ink-dim);
-  text-shadow: 0 1px 3px rgb(0 0 0 / 0.55);
-}
-
-.brand-logo {
-  block-size: max(14px, 0.95rem);
-  inline-size: auto;
-  filter: drop-shadow(0 0.05em 0.4em rgb(0 0 0 / 0.45));
-}
-
-.brand-url {
-  font-size: max(10px, 0.6rem);
-  text-transform: uppercase;
-  letter-spacing: 0.22em;
-  color: var(--ink-dim);
-  text-shadow: 0 1px 3px rgb(0 0 0 / 0.55);
-}
+/* The footer Screenly badge is the kit's standardized fixed corner .brand
+   (prepended from styles/brand.css); no app-specific badge rules needed. */
 
 /* =========================================================================
    Grid of city cards
@@ -464,9 +432,7 @@ body {
 /* Very small displays (Pi touch 480x800 / 800x480): tighten the masthead so
    the grid keeps the most room. */
 @media (max-height: 500px), (max-width: 540px) {
-  .masthead-meta,
-  .brand-by,
-  .brand-url {
+  .masthead-meta {
     display: none;
   }
 }

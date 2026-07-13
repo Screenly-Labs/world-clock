@@ -8,11 +8,22 @@
 // site works unchanged whether it is served from a domain root or from a
 // project subpath like https://<org>.github.io/world-clock/.
 
+import { readFileSync } from 'node:fs'
 import { cp, mkdir, rm } from 'node:fs/promises'
 import { bundleJs, injectGate, processCss } from '@screenly-labs/signage-kit/build'
 import { run as syncFonts } from './sync-fonts.ts'
 
 const DIST = 'dist'
+
+// The standardized fixed footer badge from @screenly-labs/signage-kit, prepended
+// to this app's main.css. Only brand.css (not the kit's fonts.css): this app uses
+// RELATIVE asset paths (../fonts/...) for Pages-subpath portability, while the
+// kit's fonts.css hard-codes /static/fonts/, so this app keeps its own relative
+// @font-face and only shares the path-agnostic badge rules.
+const brandCss = readFileSync(
+  Bun.resolveSync('@screenly-labs/signage-kit/styles/brand.css', import.meta.dir),
+  'utf8'
+)
 
 // Vendor the Bun-managed webfonts into ./assets/fonts before copying them on.
 await syncFonts()
@@ -34,7 +45,7 @@ try {
 console.log(`✓ JS: ${DIST}/main.js`)
 
 try {
-  const css = await processCss(await Bun.file('assets/styles/main.css').text(), {
+  const css = await processCss(`${brandCss}\n${await Bun.file('assets/styles/main.css').text()}`, {
     includeDegraded: true,
     filename: 'assets/styles/main.css'
   })
