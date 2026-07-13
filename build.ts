@@ -47,7 +47,15 @@ try {
 console.log(`✓ CSS: ${DIST}/styles/main.css`)
 
 // Copy the HTML shell (with the shared degraded-mode gate injected) and the fonts.
-await Bun.write(`${DIST}/index.html`, injectGate(await Bun.file('index.html').text()))
+// injectGate throws if it can't find the stylesheet anchor, so a template change
+// that drops the gate fails the build loudly instead of shipping a gate-less page.
+try {
+  await Bun.write(`${DIST}/index.html`, injectGate(await Bun.file('index.html').text()))
+} catch (error) {
+  console.error('✗ Failed to inject the degraded-mode gate into index.html')
+  console.error(error)
+  process.exit(1)
+}
 console.log(`✓ HTML: ${DIST}/index.html`)
 
 await cp('assets/fonts', `${DIST}/fonts`, { recursive: true })
