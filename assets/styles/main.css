@@ -488,3 +488,50 @@ body {
     animation: none;
   }
 }
+
+/* =========================================================================
+   Degraded mode — container-query fallback for older browsers.
+   The card sizes its text with cqw/cqh units (container queries: Chrome 105 /
+   Safari 16, above the ~2018 floor). Where they're unsupported the sized
+   declarations drop to a small inherited size, so re-size the readable text off
+   the viewport (vmin) instead. Grid-count-agnostic, so it stays legible whether
+   the board shows one city or twelve -- just not per-card-perfect.
+   ========================================================================= */
+@supports not (container-type: size) {
+  .card-label {
+    font-size: clamp(0.8rem, 2.2vmin, 1.4rem);
+  }
+  .card-offset {
+    font-size: clamp(0.6rem, 1.4vmin, 0.85rem);
+  }
+  .card-time {
+    font-size: clamp(1.5rem, 7vmin, 9rem);
+  }
+  .card-period {
+    font-size: clamp(0.65rem, 2.6vmin, 1.7rem);
+  }
+  .card-date {
+    font-size: clamp(0.78rem, 2vmin, 1.3rem);
+  }
+}
+
+/* =========================================================================
+   Degraded mode — old/weak signage players (html.legacy set by the inline gate
+   in index.html). Assume the device can't afford animation; drop it entirely.
+   .anim has a base opacity:0 and only appears via the entrance animation, so the
+   legacy block reveals it (opacity:1), mirroring the reduced-motion resting
+   state; the ambient breathe is then cancelled.
+   ========================================================================= */
+html.legacy .anim {
+  opacity: 1;
+}
+html.legacy *,
+html.legacy *::before,
+html.legacy *::after {
+  /* biome-ignore lint/complexity/noImportantStyles: kill-switch must override the entrance/ambient animation rules */
+  animation: none !important;
+  /* biome-ignore lint/complexity/noImportantStyles: kill-switch must override any transition */
+  transition: none !important;
+  /* biome-ignore lint/complexity/noImportantStyles: release GPU layer hints on weak devices */
+  will-change: auto !important;
+}
