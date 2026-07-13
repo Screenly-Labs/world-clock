@@ -531,22 +531,11 @@ body {
 }
 
 /* =========================================================================
-   Degraded mode — old/weak signage players (html.legacy set by the inline gate
-   in index.html). Assume the device can't afford animation; drop it entirely.
-   .anim has a base opacity:0 and only appears via the entrance animation, so the
-   legacy block reveals it (opacity:1), mirroring the reduced-motion resting
-   state; the ambient breathe is then cancelled.
+   Degraded mode — app-specific resting state (the generic html.legacy kill-switch
+   is prepended at build by @screenly-labs/signage-kit). .anim has a base
+   opacity:0 and only appears via the entrance animation, so reveal it here
+   (the kill-switch cancels the animation itself), mirroring reduced-motion.
    ========================================================================= */
 html.legacy .anim {
   opacity: 1;
-}
-html.legacy *,
-html.legacy *::before,
-html.legacy *::after {
-  /* biome-ignore lint/complexity/noImportantStyles: kill-switch must override the entrance/ambient animation rules */
-  animation: none !important;
-  /* biome-ignore lint/complexity/noImportantStyles: kill-switch must override any transition */
-  transition: none !important;
-  /* biome-ignore lint/complexity/noImportantStyles: release GPU layer hints on weak devices */
-  will-change: auto !important;
 }
