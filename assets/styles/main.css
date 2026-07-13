@@ -511,6 +511,12 @@ body {
     font-size: clamp(0.6rem, 1.4vmin, 0.85rem);
   }
   .card-clock {
+    /* Without container size-containment the base `margin-block: auto` no longer
+       centers the time between the head and date, so grow the clock to fill the
+       middle space and center its content vertically here instead. */
+    flex: 1;
+    margin-block: 0;
+    align-items: center;
     padding-block: clamp(0.2rem, 1.2vmin, 0.6rem);
   }
   .card-time {
