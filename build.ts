@@ -90,4 +90,4 @@ console.log(`✓ Manifest: ${DIST}/.well-known/signage-app.json`)
 await Bun.write(`${DIST}/.nojekyll`, '')
 console.log(`✓ ${DIST}/.nojekyll`)
 
-console.log('Build complete — static site written to ./dist')
+console.log('Build complete: static site written to ./dist')

@@ -16,20 +16,20 @@ Screenly lockup in the footer.
 
 ## Settings (URL parameters)
 
-Everything on screen is driven by the query string — no build step or config
+Everything on screen is driven by the query string: no build step or config
 file needed to change the board. All settings are optional; with **no parameters
 at all**, a default board of major world cities is shown in 24-hour `en-GB`.
 
 | Setting   | Values / syntax                                   | Default        | Repeatable | What it does |
 | --------- | ------------------------------------------------- | -------------- | ---------- | ------------ |
-| `tz`      | `Area/City` or `Area/City\|Label`                 | —              | yes        | Adds one clock. Repeat the parameter for more cities. |
-| `clocks`  | comma-separated list of the `tz` syntax           | —              | yes        | Adds several clocks in a single parameter. |
+| `tz`      | `Area/City` or `Area/City\|Label`                 | none           | yes        | Adds one clock. Repeat the parameter for more cities. |
+| `clocks`  | comma-separated list of the `tz` syntax           | none           | yes        | Adds several clocks in a single parameter. |
 | `locale`  | a [BCP-47 tag](https://en.wikipedia.org/wiki/IETF_language_tag) (`en-US`, `de-DE`, `fr-FR`, `ja-JP`) | `en-GB` | no | **Global** display language for every card's date and time, and the default 12/24h cycle. |
 | `format`  | `12` or `24`                                      | the locale's default | no | Forces the hour cycle on every card, overriding the locale. |
 | `seconds` | present, or `=1` / `=0`                            | off            | no | Shows seconds and ticks every second (otherwise ticks each minute). |
 | `title`   | any text                                          | `World Clock`  | no | Replaces the masthead label. |
 
-### `tz` and `clocks` — choosing the cities
+### `tz` and `clocks`: choosing the cities
 
 A clock is an [IANA timezone name](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones)
 (`Europe/London`, `America/New_York`, `Asia/Kolkata`) with an optional label
@@ -38,7 +38,7 @@ after a `|`:
 - `tz=Asia/Tokyo` → labelled "Tokyo" (derived from the zone)
 - `tz=Asia/Tokyo|HQ Tokyo` → labelled "HQ Tokyo"
 
-Add as many as you like, either by repeating `tz` or with one `clocks` list — the
+Add as many as you like, either by repeating `tz` or with one `clocks` list; the
 two can be combined and the order is preserved. **Unknown timezones are skipped**
 rather than shown broken, so a typo drops one card instead of breaking the board.
 
@@ -49,13 +49,13 @@ rather than shown broken, so a typo drops one card instead of breaking the board
 
 ### `locale` is global, not per-city
 
-A world clock shows every city in **one** language and time format — the
+A world clock shows every city in **one** language and time format: the
 viewer's, set once with `locale`. The timezone is the only thing that differs
 per card. (Localizing each city into its own local language would make a board of
 clocks unreadable, so it is deliberately not supported.)
 
 > Non-Latin locales (CJK, Arabic, …) render their text using the **device's own
-> fonts** — only Latin webfonts are vendored to keep the site small and CDN-free.
+> fonts**: only Latin webfonts are vendored to keep the site small and CDN-free.
 > The time digits are always Latin, so they render in Fraunces everywhere.
 
 ### Examples
@@ -74,7 +74,7 @@ clocks unreadable, so it is deliberately not supported.)
 ## Resolutions
 
 Responsive from a Raspberry Pi touch display (480×800) up to 4K (4096×2160), in
-both orientations — see [`Playground/docs/resolutions.md`](../../Playground/docs/resolutions.md).
+both orientations, see [`Playground/docs/resolutions.md`](../../Playground/docs/resolutions.md).
 The grid divides the screen into equal cells, so any number of cities fills the
 board without scrolling or clipping.
 
@@ -100,7 +100,7 @@ and copies the HTML shell + vendored fonts into `./dist`.
 
 ## Deployment (GitHub Pages)
 
-Deploys are **tag-driven**. Pushing a CalVer tag (`YYYY.N`, e.g. `2026.8.0`)
+Deploys are **tag-driven**. Pushing a CalVer tag (`YYYY.M.PATCH`, e.g. `2026.8.0`)
 runs [`.github/workflows/deploy-pages.yml`](.github/workflows/deploy-pages.yml),
 which lints, typechecks, tests, builds `./dist`, and publishes it to Pages; it
 also accepts `workflow_dispatch`. Pushing to `master` on its own does **not**

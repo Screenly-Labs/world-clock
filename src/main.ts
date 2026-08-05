@@ -2,7 +2,7 @@
 // formatting, day-period banding) lives in ./clocks.ts and is unit-tested; this
 // file only reads the query string, builds one card per clock, and re-renders
 // them on a shared timer. Loaded as a `type="module"` script from the static
-// index.html — no framework, no server.
+// index.html: no framework, no server.
 
 // Side-effect import: installs the replaceChildren shim for the older-browser
 // degraded mode (shared across all apps). Must stay first.
@@ -30,13 +30,13 @@ declare global {
   }
 }
 
-// Report how the board is configured — the whole app is URL-driven, so the
+// Report how the board is configured; the whole app is URL-driven, so the
 // query string *is* the usage. Fired once at load so we can see, in aggregate,
 // how many cities people show, which zones, and which locale/format options
 // they pick. No free-text (the custom title) is sent, only whether one is set.
 const reportUsage = (config: ClockConfig): void => {
   if (typeof window.gtag !== 'function') return
-  // GA4 params should be strings or numbers — booleans can coerce
+  // GA4 params should be strings or numbers; booleans can coerce
   // inconsistently or get dropped in reports, so flags are sent as 0/1.
   window.gtag('event', 'clock_config', {
     clock_count: config.clocks.length,
@@ -52,8 +52,8 @@ const reportUsage = (config: ClockConfig): void => {
 }
 
 // Comma-joined IANA zones (deduped, sorted) for the analytics dimension. GA4
-// caps a param value at 100 chars, so drop WHOLE zones — never a mid-name slice
-// like "America/Los_A…" — until the list plus a trailing "…" marker fits. The
+// caps a param value at 100 chars, so drop WHOLE zones, never a mid-name slice
+// like "America/Los_A…", until the list plus a trailing "…" marker fits. The
 // marker keeps a truncated board distinguishable from an exact list.
 const ZONES_MAX = 100
 const encodeZones = (clocks: ClockSpec[]): string => {
@@ -69,7 +69,7 @@ const encodeZones = (clocks: ClockSpec[]): string => {
 
 // One rendered clock: its root element plus an update(date) that repaints it
 // from an absolute instant. Formatters are built once and captured in the
-// closure — rebuilding a DateTimeFormat every tick is the expensive part.
+// closure; rebuilding a DateTimeFormat every tick is the expensive part.
 interface ClockCard {
   el: HTMLElement
   update(now: Date): void
@@ -81,7 +81,7 @@ const setText = (el: Element, value: string): void => {
 
 const createCard = (spec: ClockSpec, config: ClockConfig, index: number): ClockCard => {
   const fmt = buildFormatters(spec, config)
-  // Direction comes from the single global locale — every card shares it.
+  // Direction comes from the single global locale; every card shares it.
   const dir = isRtlLocale(config.locale) ? 'rtl' : 'ltr'
 
   const el = document.createElement('article')
@@ -141,7 +141,7 @@ const createCard = (spec: ClockSpec, config: ClockConfig, index: number): ClockC
 // Choose a balanced grid shape for `count` cards on a board of the current
 // aspect ratio, and centre a partial last row. The board is landscape signage,
 // so we derive the ROW count from the aspect (a wide board wants few rows) and
-// let the columns follow — 4 cities → 2x2, 7 → 4+3, 6 → 3x2. The last row is
+// let the columns follow: 4 cities → 2x2, 7 → 4+3, 6 → 3x2. The last row is
 // centred via the 2x sub-column grid: offsetting its first card by half the
 // empty span lands an odd remainder (e.g. 4+3) exactly in the middle.
 const layoutGrid = (grid: HTMLElement, cards: ClockCard[]): void => {
