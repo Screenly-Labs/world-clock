@@ -100,8 +100,11 @@ and copies the HTML shell + vendored fonts into `./dist`.
 
 ## Deployment (GitHub Pages)
 
-Pushing to `master` runs [`.github/workflows/deploy-pages.yml`](.github/workflows/deploy-pages.yml),
-which lints, typechecks, tests, builds `./dist`, and publishes it to Pages.
+Deploys are **tag-driven**. Pushing a CalVer tag (`YYYY.N`, e.g. `2026.8.0`)
+runs [`.github/workflows/deploy-pages.yml`](.github/workflows/deploy-pages.yml),
+which lints, typechecks, tests, builds `./dist`, and publishes it to Pages; it
+also accepts `workflow_dispatch`. Pushing to `master` on its own does **not**
+deploy.
 
 **One-time setup:** in the repo's **Settings → Pages → Build and deployment**, set
 **Source** to **GitHub Actions**. All asset paths are relative, so the site works
