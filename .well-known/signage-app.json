@@ -2,7 +2,7 @@
   "manifestVersion": "1",
   "id": "world-clock",
   "name": "World Clock",
-  "description": "A clean, full-screen board of city clocks for any display — every city shows its own local time, date and GMT offset with a day/night accent, so a wall of cities reads at a glance as who is awake.",
+  "description": "A clean, full-screen board of city clocks for any display. Every city shows its own local time, date and GMT offset with a day/night accent, so a wall of cities reads at a glance as who is awake.",
   "summary": "Every time zone that matters, on one screen.",
   "vendor": "Screenly",
   "tags": ["Clock"],
