@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 // Vendor this app's webfonts into ./assets/fonts. The files, versions, and copy
-// logic all live in @screenly-labs/signage-kit — this just names the families
+// logic all live in @screenly-labs/signage-kit; this just names the families
 // the board uses (Fraunces time digits + Hanken Grotesk chrome) and the dest
 // dir (this app keeps a relative ../fonts/ layout, not /static/fonts).
 

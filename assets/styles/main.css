@@ -1,9 +1,9 @@
 /* =========================================================================
-   World Clock — "Observatory" theme
+   World Clock: "Observatory" theme
    Editorial almanac aesthetic borrowed from the Screenly clock-app: a Fraunces
    display serif over a deep night sky, atmospheric grain + vignette, and a
-   time-of-day reactive accent. Here the accent is PER CARD — every city glows
-   with its own dawn/day/dusk/night band — so a wall of zones reads at a glance.
+   time-of-day reactive accent. Here the accent is PER CARD: every city glows
+   with its own dawn/day/dusk/night band, so a wall of zones reads at a glance.
    Tuned for unattended digital signage: legible at distance, no interaction,
    responsive from a 480x800 Pi touch display up to 4096x2160.
    ========================================================================= */
@@ -48,7 +48,7 @@
   --ink-dim: rgb(247 243 236 / 0.74);
   --hairline: rgb(247 243 236 / 0.16);
 
-  /* Single fluid root size — symmetric across orientation (vw + vh) so the
+  /* Single fluid root size, symmetric across orientation (vw + vh) so the
      whole layout scales smoothly from a Pi touch display up to 4K. */
   --root: clamp(15px, 0.82vw + 0.82vh, 54px);
 }
@@ -78,7 +78,7 @@ body {
   font-family: var(--font-meta);
   line-height: 1.3;
   /* A deep, neutral observatory sky. Unlike the single-zone clock-app, the page
-     can't belong to one time of day — many zones share it — so the backdrop
+     can't belong to one time of day (many zones share it), so the backdrop
      stays a constant night and each card carries its own period glow. */
   background-color: #06070f;
   background-image:
@@ -95,7 +95,7 @@ body {
 }
 
 /* =========================================================================
-   Board shell — masthead / grid, plus vignette, grain and ambient glow
+   Board shell: masthead / grid, plus vignette, grain and ambient glow
    ========================================================================= */
 .board {
   position: relative;
@@ -157,7 +157,7 @@ body {
 }
 
 /* =========================================================================
-   Masthead — title eyebrow + live UTC reference
+   Masthead: title eyebrow + live UTC reference
    ========================================================================= */
 .masthead {
   display: flex;
@@ -206,8 +206,8 @@ body {
 /* =========================================================================
    Grid of city cards
    The column count (--cols) is computed in main.ts from the city count AND the
-   board's aspect ratio, so the board is a balanced block — 4 cities → 2x2,
-   7 → 4+3 — instead of whatever happens to fit the width. A partial last row is
+   board's aspect ratio, so the board is a balanced block (4 cities → 2x2,
+   7 → 4+3) instead of whatever happens to fit the width. A partial last row is
    centred, not left-aligned: the grid is laid out in TWICE as many tracks as
    there are columns (each card spans 2), so main.ts can offset the last row by
    a half-column and centre an odd remainder exactly. align-content stretches
@@ -233,14 +233,14 @@ body {
 }
 
 /* =========================================================================
-   City card — the hero unit. Each is its own container so the time can size
+   City card: the hero unit. Each is its own container so the time can size
    to the CARD width (container queries), staying balanced no matter how many
    cities share the board.
    ========================================================================= */
 .card {
   --accent: #9aa6f2;
   /* container-type: size (not just inline-size) so the time can query the card
-     HEIGHT as well as its width — the grid gives every card a definite size. */
+     HEIGHT as well as its width; the grid gives every card a definite size. */
   container-type: size;
   position: relative;
   overflow: hidden;
@@ -262,7 +262,7 @@ body {
   transition: --accent 1.1s ease;
 }
 
-/* Period-tinted glow bleeding in from the top — the card's "sky". */
+/* Period-tinted glow bleeding in from the top, the card's "sky". */
 .card-glow {
   position: absolute;
   inset: 0;
@@ -365,7 +365,7 @@ body {
   margin-inline-start: 0;
 }
 
-/* ko / zh-Hant print the period before the time — reorder the marker. */
+/* ko / zh-Hant print the period before the time, so reorder the marker. */
 .card-clock.period-first .card-period {
   order: -1;
   margin-inline-start: 0;
@@ -403,7 +403,7 @@ body {
 }
 
 /* =========================================================================
-   Entrance choreography — one staggered reveal on load
+   Entrance choreography: one staggered reveal on load
    ========================================================================= */
 .anim {
   opacity: 0;
@@ -456,14 +456,15 @@ body {
 }
 
 /* =========================================================================
-   Degraded mode — container-query fallback for older browsers.
+   Degraded mode: container-query fallback for older browsers.
    The card sizes its text AND spacing with cqw/cqh units (container queries:
    Chrome 105 / Safari 16). Where they're unsupported those declarations drop, so
    the text collapses to an inherited size and the card loses its gap/padding
    (leaving the time jammed against the edge, unstyled and misaligned). Re-derive
-   everything off the viewport (vmin) instead — grid-count-agnostic, so it stays
-   legible and laid-out whether the board shows one city or twelve. This block
-   must cover EVERY cqw/cqh declaration in the card, not just the font sizes.
+   everything off the viewport (vmin) instead, which is grid-count-agnostic, so
+   it stays legible and laid-out whether the board shows one city or twelve. This
+   block must cover EVERY cqw/cqh declaration in the card, not just the font
+   sizes.
    ========================================================================= */
 @supports not (container-type: size) {
   .card {
@@ -497,7 +498,7 @@ body {
 }
 
 /* =========================================================================
-   Degraded mode — app-specific resting state (the generic html.legacy kill-switch
+   Degraded mode: app-specific resting state (the generic html.legacy kill-switch
    is prepended at build by @screenly-labs/signage-kit). .anim has a base
    opacity:0 and only appears via the entrance animation, so reveal it here
    (the kill-switch cancels the animation itself), mirroring reduced-motion.
