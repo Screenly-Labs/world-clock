@@ -7,7 +7,9 @@
 // Side-effect import: installs the replaceChildren shim for the older-browser
 // degraded mode (shared across all apps). Must stay first.
 import '@screenly-labs/signage-kit/polyfills'
+import { trackPlayer } from '@screenly-labs/signage-kit/analytics'
 import { removeScreenlyBranding } from '@screenly-labs/signage-kit/branding'
+import { detectPlayer } from '@screenly-labs/signage-kit/profiler'
 import {
   buildFormatters,
   type ClockConfig,
@@ -171,6 +173,22 @@ const start = (): void => {
   removeScreenlyBranding()
   const config = parseClocks(window.location.search)
   reportUsage(config)
+  // Report which player is showing this, and how the board is configured. The same
+  // values reportUsage() already sends as an event, but at user scope, so every event
+  // from this screen can be filtered by them and totalUsers by clock_count answers "how
+  // many screens show six cities" directly. `zones` is deliberately left to the event
+  // only: it is a joined city list, so as a user property it would be near-unique per
+  // screen and useless to group by.
+  trackPlayer(detectPlayer(), {
+    app: 'world-clock',
+    config: {
+      clock_count: config.clocks.length,
+      locale: config.locale,
+      hour_format: config.format || 'auto',
+      show_seconds: config.seconds ? 1 : 0,
+      configured: config.configured ? 1 : 0
+    }
+  })
 
   const titleEl = document.querySelector('#title')
   if (titleEl && config.title) titleEl.textContent = config.title
