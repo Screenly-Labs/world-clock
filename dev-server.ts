@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 // Local dev server for testing the static build on the LAN. It builds the site
 // once, serves ./dist on 0.0.0.0 (so other devices on the network can reach it),
-// and rebuilds whenever a source file changes. This is a dev convenience only —
+// and rebuilds whenever a source file changes. This is a dev convenience only,
 // production is the static ./dist published to GitHub Pages, never this server.
 
 import { watch } from 'node:fs'
@@ -27,7 +27,7 @@ let pending: ReturnType<typeof setTimeout> | undefined
 const scheduleBuild = (): void => {
   if (pending) clearTimeout(pending)
   pending = setTimeout(() => {
-    console.log('↻ change detected — rebuilding…')
+    console.log('↻ change detected, rebuilding…')
     void build()
   }, 120)
 }
@@ -68,5 +68,5 @@ console.log(`\nWorld Clock dev server`)
 console.log(`  local:   http://localhost:${server.port}/`)
 console.log(`  network: http://0.0.0.0:${server.port}/  (reachable on your LAN IP)`)
 console.log(
-  `Watching ${[...WATCH_DIRS, ...WATCH_FILES].join(', ')} — edits rebuild automatically.\n`
+  `Watching ${[...WATCH_DIRS, ...WATCH_FILES].join(', ')}, edits rebuild automatically.\n`
 )

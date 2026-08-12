@@ -7,7 +7,7 @@
 // timezone. main.ts owns the DOM, the ticking timer and `window`.
 
 // A single clock to render: which IANA zone, and what to call it. The display
-// language (locale) is NOT per-clock — a world clock shows every city in the
+// language (locale) is NOT per-clock: a world clock shows every city in the
 // viewer's one chosen language and 12/24h format; only the timezone differs.
 export interface ClockSpec {
   timeZone: string
@@ -33,7 +33,7 @@ export interface ClockConfig {
 }
 
 // Neutral default locale: en-GB gives 24h time and plain English month/weekday
-// names — a sane, predictable baseline for signage when no locale is requested.
+// names, a sane, predictable baseline for signage when no locale is requested.
 export const FALLBACK_LOCALE = 'en-GB'
 
 // Shown when the URL carries no clocks: a spread of major cities across the
@@ -53,7 +53,7 @@ export const DEFAULT_CLOCKS: ClockSpec[] = [
 const RTL_LANGUAGES = new Set(['ar', 'fa', 'he', 'ps', 'dv', 'ur', 'ckb', 'sd', 'yi'])
 
 // BCP-47 subtags are case-insensitive, so lowercase the primary language before
-// the lookup — otherwise "AR-SA" would be mis-classified as LTR.
+// the lookup; otherwise "AR-SA" would be mis-classified as LTR.
 export const isRtlLocale = (locale: string): boolean =>
   RTL_LANGUAGES.has((locale.split('-')[0] ?? '').toLowerCase())
 
@@ -140,7 +140,7 @@ export const parseClocks = (search: string): ClockConfig => {
 }
 
 // The cached Intl formatters for one clock. Built once per spec and reused on
-// every tick — constructing a DateTimeFormat per render is the costly part.
+// every tick; constructing a DateTimeFormat per render is the costly part.
 // `offset` is undefined on engines that lack the 'shortOffset' option (see
 // buildFormatters); the card simply omits the GMT label there.
 export interface ClockFormatters {
@@ -193,7 +193,7 @@ export const buildFormatters = (spec: ClockSpec, config: ClockConfig): ClockForm
   }
 }
 
-// Short GMT offset for the zone, e.g. "GMT+9" — useful orientation on a board of
+// Short GMT offset for the zone, e.g. "GMT+9", useful orientation on a board of
 // many cities. 'shortOffset' only landed in ~Chrome 91 and throws where it is
 // unsupported; since isValidTimeZone validates with a plain formatter, an old
 // signage webview would otherwise crash the whole page here. Degrade to no offset
@@ -232,7 +232,7 @@ export const formatTimeParts = (
 export const formatDate = (formatter: Intl.DateTimeFormat, date: Date): string =>
   formatter.format(date)
 
-// Hour (0-23) of an absolute instant in the clock's zone — feeds getDayPeriod.
+// Hour (0-23) of an absolute instant in the clock's zone; feeds getDayPeriod.
 export const getZonedHour = (formatter: Intl.DateTimeFormat, date: Date): number =>
   Number.parseInt(formatter.format(date), 10)
 
