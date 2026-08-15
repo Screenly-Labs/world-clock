@@ -181,6 +181,7 @@ const start = (): void => {
   // screen and useless to group by.
   trackPlayer(detectPlayer(), {
     app: 'world-clock',
+    sendPageView: true,
     config: {
       clock_count: config.clocks.length,
       locale: config.locale,
